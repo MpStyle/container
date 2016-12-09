@@ -23,7 +23,7 @@ composer require "mpstyle/container=1.0.*"
 
 ## Usages
 
-Using a singleton instance wrapper:
+Using the wrapper of singleton instance:
 
 ```php
 
