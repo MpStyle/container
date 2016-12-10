@@ -1,7 +1,6 @@
 {
   "name": "mpstyle/container",
   "description": "Lazy and naive container for the dependency injection for PHP 7",
-  "version": "1.0.0",
   "type": "library",
   "license": "LGPL v3",
   "authors": [
