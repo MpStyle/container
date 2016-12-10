@@ -10,7 +10,7 @@ Simply add a dependency on _mpstyle/container_ to your project's _composer.json_
 ```json
 {
     "require-dev": {
-        "mpstyle/container": "1.0.*"
+        "mpstyle/container": "1.*.*"
     }
 }
 ```
@@ -18,7 +18,7 @@ Simply add a dependency on _mpstyle/container_ to your project's _composer.json_
 or using console:
 
 ```
-composer require "mpstyle/container=1.0.*"
+composer require "mpstyle/container=1.*.*"
 ```
 
 ## Usages
