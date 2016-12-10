@@ -14,36 +14,42 @@ use ReflectionException;
  * class Dummy {}
  * class Bar implements Foo {
  *     public $dummy;
- *
  *     public function __construct(Dummy $d){ $this->dummy = $d; }
  * }
- *
  * // add an instance:
  * Container::getInstance()->addInstance(Foo::class, new Bar());
- *
  * // add a definition:
  * Container::getInstance()->addInstance(Foo::class, Bar::class);
- *
  * // retrieve an object:
  * $foo = Container::getInstance()->get(Foo::class);
- *
  * // $foo is an instance of Bar, and $dummy property of Bar is initialized and is an instance of Dummy.
  * </code>
  */
 class Container
 {
-    /**
-     * @var array
-     */
-    private $instances = array();
+    const TRIGGER_ERROR = 'trigger_error';
 
     /**
      * @var array
      */
-    private $definitions = array();
+    private $instances = [];
 
-    public function __construct()
+    /**
+     * @var array
+     */
+    private $definitions = [];
+
+    /**
+     * @var bool
+     */
+    private $triggerError = false;
+
+    public function __construct( array $settings = [] )
     {
+        if( isset($settings[self::TRIGGER_ERROR]) )
+        {
+            $this->triggerError = (bool)$settings[self::TRIGGER_ERROR];
+        }
     }
 
     /**
@@ -60,7 +66,7 @@ class Container
      */
     public function clearInstances()
     {
-        $this->instances = array();
+        $this->instances = [];
     }
 
     /**
@@ -68,7 +74,7 @@ class Container
      */
     public function clearDefinitions()
     {
-        $this->definitions = array();
+        $this->definitions = [];
     }
 
     /**
@@ -78,14 +84,16 @@ class Container
      * @param string $class The name of the implementation of the $key interface/abstract class.
      * @throws ClassDoesNotExistException
      */
-    public function addDefinition(string $key, string $class)
+    public function addDefinition( string $key, string $class )
     {
-        if (class_exists($class) === false) {
-            throw new ClassDoesNotExistException($class);
+        if( class_exists( $class ) === false )
+        {
+            throw new ClassDoesNotExistException( $class );
         }
 
-        if (isset($this->definitions[$key]) === true) {
-            trigger_error(sprintf("%s already exists in definitions", $key), E_USER_WARNING);
+        if( isset($this->definitions[$key]) === true )
+        {
+            $this->triggerError( sprintf( "%s already exists in definitions", $key ), E_USER_WARNING );
         }
 
         $this->definitions[$key] = $class;
@@ -97,10 +105,11 @@ class Container
      * @param string $key The name of interface or abstract class.
      * @param mixed $obj
      */
-    public function addInstance(string $key, $obj)
+    public function addInstance( string $key, $obj )
     {
-        if (isset($this->instances[$key]) === true) {
-            trigger_error(sprintf("%s already exists in instances", $key), E_USER_WARNING);
+        if( isset($this->instances[$key]) === true )
+        {
+            $this->triggerError( sprintf( "%s already exists in instances", $key ), E_USER_WARNING );
         }
 
         $this->instances[$key] = $obj;
@@ -112,18 +121,22 @@ class Container
      * @param string $key The name of interface or abstract class.
      * @return object The requested object.
      */
-    public function get($key)
+    public function get( $key )
     {
-        if (isset($this->instances[$key]) == false) {
-            if (isset($this->definitions[$key])) {
+        if( isset($this->instances[$key]) == false )
+        {
+            if( isset($this->definitions[$key]) )
+            {
                 $className = $this->definitions[$key];
-            } else {
-                trigger_error(sprintf("%s is not in container", $key), E_USER_NOTICE);
+            }
+            else
+            {
+                $this->triggerError( sprintf( "%s is not in container", $key ), E_USER_NOTICE );
 
                 $className = $key;
             }
 
-            $this->instances[$key] = $this->instantiateClass($className);
+            $this->instances[$key] = $this->instantiateClass( $className );
         }
 
         return $this->instances[$key];
@@ -135,27 +148,39 @@ class Container
      *
      * @param string $className The name of the class to instantiate.
      * @return object The requested object.
-     * @throws NotInjectableException This exception will be throwed if the requested object does not implements the {@link Injectable} interface.
+     * @throws NotInjectableException This exception will be throwed if the requested object does not implements the
+     *     {@link Injectable} interface.
      * @throws ReflectionException Throwed if the class does not exist.
      */
-    private function instantiateClass(string $className)
+    private function instantiateClass( string $className )
     {
-        if (!in_array(Injectable::class, class_implements($className))) {
-            throw new NotInjectableException($className);
+        if( !in_array( Injectable::class, class_implements( $className ) ) )
+        {
+            throw new NotInjectableException( $className );
         }
 
-        $reflection = new \ReflectionClass($className);
+        $reflection = new \ReflectionClass( $className );
 
-        $paramsInstances = array();
+        $paramsInstances = [];
         $constructor = $reflection->getConstructor();
 
-        if (is_null($constructor) === false) {
+        if( is_null( $constructor ) === false )
+        {
             $params = $constructor->getParameters();
-            foreach ($params AS $param) {
-                $paramsInstances[] = $this->get($param->getClass()->name);
+            foreach( $params AS $param )
+            {
+                $paramsInstances[] = $this->get( $param->getClass()->name );
             }
         }
 
-        return $reflection->newInstanceArgs($paramsInstances);
+        return $reflection->newInstanceArgs( $paramsInstances );
+    }
+
+    private function triggerError( string $message, int $type )
+    {
+        if( $this->triggerError )
+        {
+            trigger_error( $message, $type );
+        }
     }
 }

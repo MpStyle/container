@@ -23,6 +23,35 @@ composer require "mpstyle/container=1.0.*"
 
 ## Usages
 
+Simple usage of container:
+
+```php
+
+interface Foo {}
+
+class Dummy {}
+
+class Bar implements Foo {
+    public $dummy;
+
+    public function __construct(Dummy $d){ $this->dummy = $d; }
+}
+
+$container = new Container();
+
+// add an instance:
+$container->addInstance(Foo::class, new Bar());
+
+// or add a definition:
+$container->addInstance(Foo::class, Bar::class);
+
+// retrieve an object:
+$foo =  $container->get(Foo::class);
+
+// $foo is an instance of Bar, and $dummy property of Bar is initialized as an instance of Dummy.
+
+```
+
 Using the wrapper of singleton instance:
 
 ```php
@@ -48,3 +77,13 @@ $foo =  UniqueContainer::get()->get(Foo::class);
 
 // $foo is an instance of Bar, and $dummy property of Bar is initialized as an instance of Dummy.
 ```
+
+### Constructor
+
+The constructor of the _container_ class has a single parameter: _$settings_.
+This is an array of configuration.
+The only one supported value is _trigger_error (default: false).
+If it is setted to _true_ will be triggered error messages when:
+- it's required an object not present in the container (NOTICE)
+- it's added a definition already present in the container (WARNING)
+- it's added an instance already present in the container (WARNING)
