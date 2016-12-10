@@ -27,9 +27,9 @@ Simple usage of container:
 
 ```php
 
-interface Foo {}
+interface Foo extends Injectable {}
 
-class Dummy {}
+class Dummy implements Injectable {}
 
 class Bar implements Foo {
     public $dummy;
@@ -56,9 +56,9 @@ Using the wrapper of singleton instance:
 
 ```php
 
-interface Foo {}
+interface Foo extends Injectable {}
 
-class Dummy {}
+class Dummy implements Injectable {}
 
 class Bar implements Foo {
     public $dummy;
@@ -67,10 +67,10 @@ class Bar implements Foo {
 }
 
 // add an instance:
-UniqueContainer::get()->addInstance(Foo::class, new Bar());
+UniqueContainer::get()->addInstance( Foo::class, new Bar(new Dummy()) );
 
 // or add a definition:
-UniqueContainer::get()->addInstance(Foo::class, Bar::class);
+UniqueContainer::get()->addDefinition( Foo::class, Bar::class );
 
 // retrieve an object:
 $foo =  UniqueContainer::get()->get(Foo::class);
