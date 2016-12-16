@@ -20,5 +20,8 @@
         "test/"
       ]
     }
+  },
+  "scripts": {
+    "tests": "php libs/bin/phpunit test"
   }
 }
