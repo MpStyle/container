@@ -3,4 +3,4 @@ php:
   - '7.0'
 install:
    - composer update
-script: tests
+script: composer tests
