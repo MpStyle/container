@@ -14,14 +14,16 @@
     "phpunit/phpunit": "5.5.*"
   },
   "autoload": {
-    "psr-0": {
-      "": [
-        "src/",
-        "test/"
-      ]
+    "psr-4": {
+      "mpstyle\\": "src/mpstyle/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "mpstyle\\": "test/mpstyle/"
     }
   },
   "scripts": {
-    "tests": "php libs/bin/phpunit test"
+    "tests": "./vendor/bin/phpunit --bootstrap vendor/autoload.php test"
   }
 }
