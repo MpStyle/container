@@ -3,6 +3,8 @@
 Lazy and naive container for the dependency injection.
 Require PHP >=7.0.
 
+![Travis CI](https://travis-ci.org/MpStyle/container.svg?branch=master)
+
 ## Installation
 
 Simply add a dependency on _mpstyle/container_ to your project's _composer.json_ file if you use Composer to manage the dependencies of your project. Here is a minimal example of a composer.json file that just defines a development-time dependency on MpStyle Container:
