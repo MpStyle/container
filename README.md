@@ -80,16 +80,6 @@ $foo =  UniqueContainer::get()->get(Foo::class);
 // $foo is an instance of Bar, and $dummy property of Bar is initialized as an instance of Dummy.
 ```
 
-### Constructor
-
-The constructor of the _container_ class has a single parameter: _$settings_.
-This is an array of configuration.
-The only one supported value is _trigger_error (default: false).
-If it is setted to _true_ will be triggered error messages when:
-- it's required an object not present in the container (NOTICE)
-- it's added a definition already present in the container (WARNING)
-- it's added an instance already present in the container (WARNING)
-
 ## Version
 
 - 1.2.0 Add _Closure_ support to the container 
