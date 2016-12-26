@@ -92,4 +92,4 @@ If it is setted to _true_ will be triggered error messages when:
 
 ## Version
 
-- 1.1.0 Add _Closure_ support to the container 
+- 1.2.0 Add _Closure_ support to the container 
