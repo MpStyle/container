@@ -29,8 +29,22 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
     public function test_fails_addDefinition()
     {
-        $this->expectException( ClassDoesNotExistException::class );
+        $this->expectException( NotInjectableException::class );
         UniqueContainer::get()->addDefinition( BaseService::class, "ciao" );
+    }
+
+    public function test_addClosure()
+    {
+        UniqueContainer::get()->addClosure( BaseService::class, function ( ServiceA $serviceA, ServiceC $serviceC )
+        {
+            return new ServiceB( $serviceA, $serviceC );
+        } );
+
+        /* @var $serviceB ServiceB */
+        $serviceB = UniqueContainer::get()->get( BaseService::class );
+        $this->assertTrue( $serviceB instanceof ServiceB );
+        $this->assertTrue( $serviceB->getServiceA() instanceof ServiceA );
+        $this->assertTrue( $serviceB->getServiceC() instanceof ServiceC );
     }
 
     public function test_addDefinition()

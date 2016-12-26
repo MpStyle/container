@@ -89,3 +89,7 @@ If it is setted to _true_ will be triggered error messages when:
 - it's required an object not present in the container (NOTICE)
 - it's added a definition already present in the container (WARNING)
 - it's added an instance already present in the container (WARNING)
+
+## Version
+
+- 1.1.0 Add _Closure_ support to the container 

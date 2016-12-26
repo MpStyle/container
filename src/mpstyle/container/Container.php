@@ -2,7 +2,7 @@
 
 namespace mpstyle\container;
 
-use ReflectionException;
+use Closure;
 
 /**
  * Lazy and naive container for the dependency injection.<br>
@@ -27,29 +27,19 @@ use ReflectionException;
  */
 class Container
 {
-    const TRIGGER_ERROR = 'trigger_error';
+    /**
+     * @var InjectableObject[]
+     */
+    private $injectableObjects = [];
 
     /**
-     * @var array
+     * @var InstanceFactory
      */
-    private $instances = [];
+    private $instance;
 
-    /**
-     * @var array
-     */
-    private $definitions = [];
-
-    /**
-     * @var bool
-     */
-    private $triggerError = false;
-
-    public function __construct( array $settings = [] )
+    public function __construct()
     {
-        if( isset($settings[self::TRIGGER_ERROR]) )
-        {
-            $this->triggerError = (bool)$settings[self::TRIGGER_ERROR];
-        }
+        $this->instance = new InstanceFactory();
     }
 
     /**
@@ -57,62 +47,54 @@ class Container
      */
     public function clear()
     {
-        $this->clearDefinitions();
-        $this->clearInstances();
-    }
-
-    /**
-     * Removes all defined instances.
-     */
-    public function clearInstances()
-    {
-        $this->instances = [];
-    }
-
-    /**
-     * Removes all defined definitions.
-     */
-    public function clearDefinitions()
-    {
-        $this->definitions = [];
+        $this->injectableObjects = [];
     }
 
     /**
      * Add a class definition
+
      *
-     * @param string $key The name of interface or abstract class.
+*@param string $key The name of interface or abstract class.
      * @param string $class The name of the implementation of the $key interface/abstract class.
-     * @throws ClassDoesNotExistException
+     * @throws NotInjectableException
      */
     public function addDefinition( string $key, string $class )
     {
-        if( class_exists( $class ) === false )
+        if( !array_intersect( [Injectable::class, $key], class_implements( $class ) ) )
         {
-            throw new ClassDoesNotExistException( $class );
+            throw new NotInjectableException( $class );
         }
 
-        if( isset($this->definitions[$key]) === true )
-        {
-            $this->triggerError( sprintf( "%s already exists in definitions", $key ), E_USER_WARNING );
-        }
-
-        $this->definitions[$key] = $class;
+        $this->injectableObjects[$key] = new InjectableObject( InjectableObjectType::CLASS_TYPE, $class );
     }
 
     /**
      * Add an instance of a object.
+
      *
-     * @param string $key The name of interface or abstract class.
+*@param string $key The name of interface or abstract class.
      * @param mixed $obj
+     * @throws NotInjectableException
      */
     public function addInstance( string $key, $obj )
     {
-        if( isset($this->instances[$key]) === true )
+        if( !array_intersect( [Injectable::class, $key], class_implements( $obj ) ) )
         {
-            $this->triggerError( sprintf( "%s already exists in instances", $key ), E_USER_WARNING );
+            throw new NotInjectableException( $key );
         }
 
-        $this->instances[$key] = $obj;
+        $this->injectableObjects[$key] = new InjectableObject( InjectableObjectType::OBJECT_TYPE, $obj );
+    }
+
+    /**
+     * Add a {@link Closure} to the container.
+     *
+     * @param string $key
+     * @param Closure $obj
+     */
+    public function addClosure( string $key, Closure $obj )
+    {
+        $this->injectableObjects[$key] = new InjectableObject( InjectableObjectType::CLOSURE_TYPE, $obj );
     }
 
     /**
@@ -123,64 +105,19 @@ class Container
      */
     public function get( $key )
     {
-        if( isset($this->instances[$key]) == false )
+        if( !isset($this->injectableObjects[$key]) )
         {
-            if( isset($this->definitions[$key]) )
-            {
-                $className = $this->definitions[$key];
-            }
-            else
-            {
-                $this->triggerError( sprintf( "%s is not in container", $key ), E_USER_NOTICE );
-
-                $className = $key;
-            }
-
-            $this->instances[$key] = $this->instantiateClass( $className );
+            $this->addDefinition( $key, $key );
+            $instance = $this->get( $key );
+        }
+        else
+        {
+            $instance = $this->instance->getInjectableObject( $this->injectableObjects[$key] );
         }
 
-        return $this->instances[$key];
-    }
+        $this->addInstance( $key, $instance );
 
-    /**
-     * This method does the magic.
-     * It instantiates the class <i>$className</i> only if it implements {@link Injectable} interface.
-     *
-     * @param string $className The name of the class to instantiate.
-     * @return object The requested object.
-     * @throws NotInjectableException This exception will be throwed if the requested object does not implements the
-     *     {@link Injectable} interface.
-     * @throws ReflectionException Throwed if the class does not exist.
-     */
-    private function instantiateClass( string $className )
-    {
-        if( !in_array( Injectable::class, class_implements( $className ) ) )
-        {
-            throw new NotInjectableException( $className );
-        }
-
-        $reflection = new \ReflectionClass( $className );
-
-        $paramsInstances = [];
-        $constructor = $reflection->getConstructor();
-
-        if( is_null( $constructor ) === false )
-        {
-            $params = $constructor->getParameters();
-            foreach( $params AS $param )
-            {
-                $paramsInstances[] = $this->get( $param->getClass()->name );
-            }
-        }
-
-        return $reflection->newInstanceArgs( $paramsInstances );
-    }
-
-    private function triggerError( string $message, int $type )
-    {
-        if( $this->triggerError )
-        {
-            trigger_error( $message, $type );
-        }
+        return $this->injectableObjects[$key]->getValue();
     }
 }
+
