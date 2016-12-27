@@ -93,5 +93,6 @@ $foo =  UniqueContainer::get()->getInstance(Foo::class);
 
 ## Version
 
+- 1.3.1 Little fixes.
 - 1.3.0 Improved performance and stability, deprecated _Container#get(string $key)_ method, use _Container#getInstance(string $key)_ instead.
 - 1.2.0 Add _Closure_ support to the container 

@@ -67,7 +67,7 @@ class Container
      */
     public function addDefinition(string $key, string $class)
     {
-        if (!array_intersect([Injectable::class, $key], class_implements($class))) {
+        if (class_exists($class) == false || !array_intersect([Injectable::class, $key], class_implements($class))) {
             throw new NotInjectableException($key);
         }
 

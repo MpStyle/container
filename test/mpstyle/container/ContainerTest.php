@@ -41,7 +41,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
     public function test_addClosure_01()
     {
-        $this->expectException(NotInjectableException::class);
         UniqueContainer::get()->addClosure(ServiceA::class, function () {
             return new ServiceD();
         });
