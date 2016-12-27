@@ -48,10 +48,21 @@ $container->addInstance(Foo::class, new Bar());
 $container->addInstance(Foo::class, Bar::class);
 
 // retrieve an object:
-$foo =  $container->get(Foo::class);
+$foo =  $container->getInstance(Foo::class);
 
 // $foo is an instance of Bar, and $dummy property of Bar is initialized as an instance of Dummy.
 
+```
+
+### Closure
+```php
+UniqueContainer::get()->addClosure( Foo::class, function ( Dummy $d ): Foo
+{
+    return new Bar( $d );
+} );
+
+/* @var $serviceB ServiceB */
+$foo = UniqueContainer::get()->getInstance( Foo::class );
 ```
 
 Using the wrapper of singleton instance:
@@ -75,11 +86,12 @@ UniqueContainer::get()->addInstance( Foo::class, new Bar(new Dummy()) );
 UniqueContainer::get()->addDefinition( Foo::class, Bar::class );
 
 // retrieve an object:
-$foo =  UniqueContainer::get()->get(Foo::class);
+$foo =  UniqueContainer::get()->getInstance(Foo::class);
 
 // $foo is an instance of Bar, and $dummy property of Bar is initialized as an instance of Dummy.
 ```
 
 ## Version
 
+- 1.3.0 Improved performance and stability, deprecated _Container#get(string $key)_ method, use _Container#getInstance(string $key)_ instead.
 - 1.2.0 Add _Closure_ support to the container 

@@ -2,7 +2,7 @@
 
 namespace mpstyle\container;
 
-class InjectableObjectType
+class InjectionType
 {
     const OBJECT_TYPE = 'object';
     const CLASS_TYPE = 'class';
