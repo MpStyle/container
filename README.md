@@ -65,6 +65,45 @@ UniqueContainer::get()->addClosure( Foo::class, function ( Dummy $d ): Foo
 $foo = UniqueContainer::get()->getInstance( Foo::class );
 ```
 
+### INI File
+
+_definitions.ini_:
+```
+mpstyle\container\dummy\Foo = mpstyle\container\dummy\Bar
+```
+
+In your PHP code:
+```php
+$path = 'definitions.ini';
+$container = Container::fromIni($path);
+$foo = $container->getInstance(Foo::class);
+
+// $foo is an instance of Bar.
+```
+
+### PHP File
+
+_definitions.php_:
+```php
+<?php
+
+return [
+    Foo::class => Bar::class
+];
+```
+
+In your PHP code:
+```php
+$path = 'definitions.php';
+$container = Container::fromPHP($path);
+
+$this->assertTrue($container->existsKey(Foo::class));
+
+$foo = $container->getInstance(Foo::class);
+```
+
+### Singleton instance
+
 Using the wrapper of singleton instance:
 
 ```php
@@ -93,6 +132,7 @@ $foo =  UniqueContainer::get()->getInstance(Foo::class);
 
 ## Version
 
+- 1.4.0 Added support to load definitions from INI file and to load a container from PHP configuration file.
 - 1.3.1 Little fixes.
 - 1.3.0 Improved performance and stability, deprecated _Container#get(string $key)_ method, use _Container#getInstance(string $key)_ instead.
-- 1.2.0 Add _Closure_ support to the container 
+- 1.2.0 Added _Closure_ support to the container 

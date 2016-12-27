@@ -33,6 +33,9 @@ class Container
      */
     private $injectableObjects = [];
 
+    /**
+     * @var array
+     */
     private $behavior = [];
 
     public function __construct()
@@ -128,7 +131,7 @@ class Container
      */
     public function getInstance($key)
     {
-        if (isset($this->injectableObjects[$key]) === false) {
+        if ($this->existsKey($key) === false) {
             $this->addDefinition($key, $key);
         }
 
@@ -139,6 +142,53 @@ class Container
         $this->injectableObjects[$key] = new InjectableObject(InjectionType::OBJECT_TYPE, $instance);
 
         return $instance;
+    }
+
+    public function existsKey($key)
+    {
+        return isset($this->injectableObjects[$key]);
+    }
+
+    /**
+     * Returns an instance of {@link Container} adding all the definitions in the INI file <i>$path</i>
+     *
+     * @param string $path
+     * @return Container
+     */
+    public static function fromIni(string $path): Container
+    {
+        $container = new Container();
+        $rows = parse_ini_file($path);
+
+        foreach ($rows as $key => $class) {
+            $container->addDefinition($key, $class);
+        }
+
+        return $container;
+    }
+
+    /**
+     * Returns an instance of {@link Container} adding all the definitions in the PHP file <i>$path</i>
+     *
+     * @param string $path
+     * @return Container
+     */
+    public static function fromPHP(string $path): Container
+    {
+        $container = new Container();
+        $rows = include($path);
+
+        foreach ($rows as $key => $value) {
+            if (is_callable($value)) {
+                $container->addClosure($key, $value);
+            } else if (is_string($value)) {
+                $container->addDefinition($key, $value);
+            } else {
+                $container->addInstance($key, $value);
+            }
+        }
+
+        return $container;
     }
 
     private function getInstanceByClosure(Closure $closure)
