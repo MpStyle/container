@@ -28,4 +28,16 @@ class ContainerFromIniTest extends \PHPUnit_Framework_TestCase
         $path = __DIR__ . '/../../../resources/fallable_definitions.ini';
         Container::fromIni($path);
     }
+
+    protected function setUp()
+    {
+        parent::setUp();
+    }
+
+
+    protected function tearDown()
+    {
+        parent::tearDown();
+        UniqueContainer::get()->clear();
+    }
 }

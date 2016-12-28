@@ -29,28 +29,12 @@ use ReflectionFunction;
 class Container
 {
     /**
-     * @var InjectableObject[]
-     */
-    private $injectableObjects = [];
-
-    /**
      * @var array
      */
-    private $behavior = [];
+    private $injectableBehavior = [];
 
     public function __construct()
     {
-        $this->behavior[InjectionType::CLASS_TYPE] = function (string $injectableObjectValue) {
-            return $this->getInstanceByClass($injectableObjectValue);
-        };
-
-        $this->behavior[InjectionType::CLOSURE_TYPE] = function (Closure $injectableObjectValue) {
-            return $this->getInstanceByClosure($injectableObjectValue);
-        };
-
-        $this->behavior[InjectionType::OBJECT_TYPE] = function ($injectableObjectValue) {
-            return $injectableObjectValue;
-        };
     }
 
     /**
@@ -58,7 +42,7 @@ class Container
      */
     public function clear()
     {
-        $this->injectableObjects = [];
+        $this->injectableBehavior = [];
     }
 
     /**
@@ -68,13 +52,17 @@ class Container
      * @param string $class The name of the implementation of the $key interface/abstract class.
      * @throws NotInjectableException
      */
-    public function addDefinition(string $key, string $class)
+    public function addDefinition( string $key, string $class )
     {
-        if (class_exists($class) == false || !array_intersect([Injectable::class, $key], class_implements($class))) {
-            throw new NotInjectableException($key);
+        if( class_exists( $class ) == false || !array_intersect( [Injectable::class, $key], class_implements( $class ) ) )
+        {
+            throw new NotInjectableException( $key );
         }
 
-        $this->injectableObjects[$key] = new InjectableObject(InjectionType::CLASS_TYPE, $class);
+        $this->injectableBehavior[$key] = function () use ( $class )
+        {
+            return $this->getInstanceByClass( $class );
+        };
     }
 
     /**
@@ -84,13 +72,17 @@ class Container
      * @param mixed $obj
      * @throws NotInjectableException
      */
-    public function addInstance(string $key, $obj)
+    public function addInstance( string $key, $obj )
     {
-        if (!array_intersect([Injectable::class, $key], class_implements($obj))) {
-            throw new NotInjectableException($key);
+        if( !array_intersect( [Injectable::class, $key], class_implements( $obj ) ) )
+        {
+            throw new NotInjectableException( $key );
         }
 
-        $this->injectableObjects[$key] = new InjectableObject(InjectionType::OBJECT_TYPE, $obj);
+        $this->injectableBehavior[$key] = function () use ( $obj )
+        {
+            return $obj;
+        };
     }
 
     /**
@@ -100,15 +92,19 @@ class Container
      * @param Closure $closure
      * @throws NotInjectableException
      */
-    public function addClosure(string $key, Closure $closure)
+    public function addClosure( string $key, Closure $closure )
     {
-        $reflection = new ReflectionFunction($closure);
+        $reflection = new ReflectionFunction( $closure );
         $returnType = $reflection->getReturnType();
-        if (is_null($returnType) === false && !array_intersect([Injectable::class, $key], [(string)$returnType])) {
-            throw new NotInjectableException($key);
+        if( is_null( $returnType ) === false && !array_intersect( [Injectable::class, $key], [(string)$returnType] ) )
+        {
+            throw new NotInjectableException( $key );
         }
 
-        $this->injectableObjects[$key] = new InjectableObject(InjectionType::CLOSURE_TYPE, $closure);
+        $this->injectableBehavior[$key] = function () use ( $closure )
+        {
+            return $this->getInstanceByClosure( $closure );
+        };
     }
 
     /**
@@ -118,9 +114,9 @@ class Container
      * @param string <i>$key</i> The name of interface or abstract class.
      * @return object The requested object.
      */
-    public function get($key)
+    public function get( $key )
     {
-        return $this->getInstance($key);
+        return $this->getInstance( $key );
     }
 
     /**
@@ -129,24 +125,22 @@ class Container
      * @param string <i>$key</i> The name of interface or abstract class.
      * @return object The requested object.
      */
-    public function getInstance($key)
+    public function getInstance( $key )
     {
-        if ($this->existsKey($key) === false) {
-            $this->addDefinition($key, $key);
+        if( $this->existsKey( $key ) === false )
+        {
+            $this->addDefinition( $key, $key );
         }
 
-        $type = $this->injectableObjects[$key]->getType();
-        $value = $this->injectableObjects[$key]->getValue();
-        $instance = $this->behavior[$type]($value);
-
-        $this->injectableObjects[$key] = new InjectableObject(InjectionType::OBJECT_TYPE, $instance);
+        $instance = $this->injectableBehavior[$key]();
+        $this->addInstance( $key, $instance );
 
         return $instance;
     }
 
-    public function existsKey($key)
+    public function existsKey( $key )
     {
-        return isset($this->injectableObjects[$key]);
+        return isset($this->injectableBehavior[$key]);
     }
 
     /**
@@ -155,13 +149,14 @@ class Container
      * @param string $path
      * @return Container
      */
-    public static function fromIni(string $path): Container
+    public static function fromIni( string $path ): Container
     {
         $container = new Container();
-        $rows = parse_ini_file($path);
+        $rows = parse_ini_file( $path );
 
-        foreach ($rows as $key => $class) {
-            $container->addDefinition($key, $class);
+        foreach( $rows as $key => $class )
+        {
+            $container->addDefinition( $key, $class );
         }
 
         return $container;
@@ -173,55 +168,64 @@ class Container
      * @param string $path
      * @return Container
      */
-    public static function fromPHP(string $path): Container
+    public static function fromPHP( string $path ): Container
     {
         $container = new Container();
         $rows = include($path);
 
-        foreach ($rows as $key => $value) {
-            if (is_callable($value)) {
-                $container->addClosure($key, $value);
-            } else if (is_string($value)) {
-                $container->addDefinition($key, $value);
-            } else {
-                $container->addInstance($key, $value);
+        foreach( $rows as $key => $value )
+        {
+            switch( true )
+            {
+                case (is_string( $value )):
+                    $container->addDefinition( $key, $value );
+                    break;
+                case (is_callable( $value )):
+                    $container->addClosure( $key, $value );
+                    break;
+                default:
+                    $container->addInstance( $key, $value );
+                    break;
             }
         }
 
         return $container;
     }
 
-    private function getInstanceByClosure(Closure $closure)
+    private function getInstanceByClosure( Closure $closure )
     {
         $paramsInstances = [];
-        $reflection = new ReflectionFunction($closure);
+        $reflection = new ReflectionFunction( $closure );
         $params = $reflection->getParameters();
 
-        foreach ($params AS $param) {
-            $paramsInstances[] = $this->getInstance($param->getClass()->name);
+        foreach( $params AS $param )
+        {
+            $paramsInstances[] = $this->getInstance( $param->getClass()->name );
         }
 
-        $instance = $reflection->invokeArgs($paramsInstances);
+        $instance = $reflection->invokeArgs( $paramsInstances );
 
         return $instance;
     }
 
-    private function getInstanceByClass(string $class)
+    private function getInstanceByClass( string $class )
     {
-        $reflection = new \ReflectionClass($class);
+        $reflection = new \ReflectionClass( $class );
 
         $paramsInstances = [];
         $constructor = $reflection->getConstructor();
 
-        if (is_null($constructor) === false) {
+        if( is_null( $constructor ) === false )
+        {
             $params = $constructor->getParameters();
 
-            foreach ($params AS $param) {
-                $paramsInstances[] = $this->getInstance($param->getClass()->name);
+            foreach( $params AS $param )
+            {
+                $paramsInstances[] = $this->getInstance( $param->getClass()->name );
             }
         }
 
-        $instance = $reflection->newInstanceArgs($paramsInstances);
+        $instance = $reflection->newInstanceArgs( $paramsInstances );
 
         return $instance;
     }
