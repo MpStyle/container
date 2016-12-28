@@ -25,7 +25,7 @@ composer require "mpstyle/container=1.*.*"
 
 ## Usages
 
-Simple usage of container:
+Simple usage of the container:
 
 ```php
 
@@ -55,6 +55,9 @@ $foo =  $container->getInstance(Foo::class);
 ```
 
 ### Closure
+
+It's possible to pass a Closure to the container which contains the logic to instantiate an object: 
+
 ```php
 UniqueContainer::get()->addClosure( Foo::class, function ( Dummy $d ): Foo
 {
@@ -66,6 +69,8 @@ $foo = UniqueContainer::get()->getInstance( Foo::class );
 ```
 
 ### INI File
+
+It's possible to create a container using a PHP file collecting definitions:
 
 _definitions.ini_:
 ```
@@ -81,7 +86,11 @@ $foo = $container->getInstance(Foo::class);
 // $foo is an instance of Bar.
 ```
 
+Closure or object are not supported using INI file.
+
 ### PHP File
+
+It's possible to create a container using a PHP file collecting configurations: 
 
 _definitions.php_:
 ```php
@@ -132,6 +141,7 @@ $foo =  UniqueContainer::get()->getInstance(Foo::class);
 
 ## Version
 
+- 1.5.0 Improved performance and tests
 - 1.4.0 Added support to load definitions from INI file and to load a container from PHP configuration file.
 - 1.3.1 Little fixes.
 - 1.3.0 Improved performance and stability, deprecated _Container#get(string $key)_ method, use _Container#getInstance(string $key)_ instead.
