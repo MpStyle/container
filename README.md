@@ -141,8 +141,11 @@ $foo =  UniqueContainer::get()->getInstance(Foo::class);
 
 ## Version
 
-- 1.5.0 Improved performance and tests
-- 1.4.0 Added support to load definitions from INI file and to load a container from PHP configuration file.
-- 1.3.1 Little fixes.
-- 1.3.0 Improved performance and stability, deprecated _Container#get(string $key)_ method, use _Container#getInstance(string $key)_ instead.
-- 1.2.0 Added _Closure_ support to the container 
+- 1.5.1: Removed unused classes.
+- 1.5.0: Improved performance and tests.
+- 1.4.0: Added support to load definitions from INI file and to load a container from PHP configuration file.
+- 1.3.1: Little fixes.
+- 1.3.0: Improved performance and stability, deprecated _Container#get(string $key)_ method, use _Container#getInstance(string $key)_ instead.
+- 1.2.0: Added _Closure_ support to the container.
+- 1.1.0
+- 1.0.0
