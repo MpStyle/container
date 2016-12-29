@@ -4,3 +4,5 @@ php:
 install:
    - composer update
 script: composer tests
+notifications:
+  email: false
