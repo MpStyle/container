@@ -3,7 +3,7 @@
 Lazy and naive container for the dependency injection.
 Require PHP >=7.0.
 
-![Travis CI](https://travis-ci.org/MpStyle/container.svg?branch=master)
+[![Build Status](https://travis-ci.org/MpStyle/container.svg?branch=master)](https://travis-ci.org/MpStyle/container)
 
 ## Installation
 
