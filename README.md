@@ -3,6 +3,8 @@
 Lazy and naive container for the dependency injection.
 Require PHP >=7.0.
 
+Use the flyweight design pattern to store a single instance of injectable classes.
+
 [![Build Status](https://travis-ci.org/MpStyle/container.svg?branch=master)](https://travis-ci.org/MpStyle/container)
 
 ## Installation
