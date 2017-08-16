@@ -7,7 +7,7 @@ use ReflectionFunction;
 
 /**
  * Lazy and naive container for the dependency injection.<br>
- * It implements singleton pattern.<br>
+ * Use the Flyweight design pattern to store a single instance of injectable classes.<br>
  * <br>
  * Usages:
  * <code>
